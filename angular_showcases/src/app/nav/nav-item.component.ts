@@ -1,6 +1,6 @@
 import { Component, input } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
-import { Route } from '../../app.routes';
+import { Route } from '../app.routes';
 
 @Component({
   selector: 'app-nav-item',

@@ -10,6 +10,15 @@ export interface Graph {
   edges: Map<NodeId, Edge[]>;
 }
 
+export type GraphAlgos = (typeof graphAlgoIds)[number];
+export const graphAlgoIds = ['bfs', 'dfs', 'dijkstra'] as const;
+export type GraphAlgoLabels = { [key in GraphAlgos]: string };
+export const graphAlgoLabels: GraphAlgoLabels = {
+  bfs: 'Breadth First Search',
+  dfs: 'Depth First Search',
+  dijkstra: "Dijkstra's Algorithm",
+};
+
 export function addNode(graph: Graph, node: NodeId): void {
   if (!graph.edges.has(node)) {
     graph.nodes.push(node);
@@ -21,7 +30,7 @@ export function addEdge(
   graph: Graph,
   from: NodeId,
   to: NodeId,
-  weight: number,
+  weight = 1,
   directed = false
 ): void {
   const fromNode = graph.edges.get(from);
@@ -56,7 +65,7 @@ export function print(graph: Graph): string {
   return result.trim();
 }
 
-export function bfs(graph: Graph, start: NodeId): NodeId[] {
+export function bfs(graph: Graph, start: NodeId, end: NodeId): NodeId[] {
   const visited = new Set<NodeId>();
   const queue: NodeId[] = [start];
   const result: NodeId[] = [];
@@ -66,6 +75,10 @@ export function bfs(graph: Graph, start: NodeId): NodeId[] {
     if (!visited.has(node)) {
       visited.add(node);
       result.push(node);
+
+      if (node === end) {
+        return result;
+      }
 
       // Push neighbors (ignoring weights in BFS traversal)
       const neighbors = graph.edges.get(node) || [];
@@ -81,9 +94,11 @@ export function bfs(graph: Graph, start: NodeId): NodeId[] {
 export function dfs(
   graph: Graph,
   start: NodeId,
+  end: NodeId,
   visited = new Set<NodeId>()
 ): NodeId[] {
   if (visited.has(start)) return [];
+  if (visited.has(end)) return [];
 
   visited.add(start);
   const result = [start];
@@ -91,7 +106,7 @@ export function dfs(
   // Traverse neighbors (ignoring weights in DFS traversal)
   const neighbors = graph.edges.get(start) || [];
   for (const edge of neighbors) {
-    result.push(...dfs(graph, edge.to, visited));
+    result.push(...dfs(graph, edge.to, end, visited));
   }
 
   return result;
@@ -131,4 +146,41 @@ export function dijkstra(graph: Graph, start: NodeId): Record<NodeId, number> {
   }
 
   return distances;
+}
+
+export function buildGridGraph(rows = 5, cols = 5): Graph {
+  const g: Graph = { nodes: [], edges: new Map() };
+
+  // Add nodes to the graph
+  for (let i = 0; i < rows * cols; i++) {
+    addNode(g, i);
+  }
+
+  // Add edges to the graph
+  for (let i = 0; i < rows * cols; i++) {
+    const row = Math.floor(i / cols);
+    const col = i % cols;
+
+    // Add left neighbor
+    if (col > 0) {
+      addEdge(g, i, i - 1);
+    }
+
+    // Add right neighbor
+    if (col < cols - 1) {
+      addEdge(g, i, i + 1);
+    }
+
+    // Add top neighbor
+    if (row > 0) {
+      addEdge(g, i, i - cols);
+    }
+
+    // Add bottom neighbor
+    if (row < rows - 1) {
+      addEdge(g, i, i + cols);
+    }
+  }
+
+  return g;
 }

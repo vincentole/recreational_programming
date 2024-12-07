@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
-import { GraphComponent } from './components/graph/graph.component';
-import { SortComponent } from './components/sort.component';
+import { GraphComponent } from './graph/graph.component';
+import { SortComponent } from './sort/sort.component';
 
 export const routes = [
   { path: 'graphs', component: GraphComponent, label: 'Graphs' },
