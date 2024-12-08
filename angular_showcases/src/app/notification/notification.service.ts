@@ -12,24 +12,23 @@ export type NotificationTypes = (typeof notificationTypes)[number];
 export class NotificationService {
   isNotificationBarActive = signal(false);
   activeNotification = computed(() => this.activeNotificationSignal());
-  notificationCountInfo = computed(
-    () => this.notificationsSignal().filter((n) => n.type === 'info').length
+
+  notificationCountByType = computed(() =>
+    notificationTypes.reduce((counts, type) => {
+      counts[type] = this.notifications().filter((n) => n.type === type).length;
+      return counts;
+    }, {} as Record<NotificationTypes, number>)
   );
-  notificationCountWarning = computed(
-    () => this.notificationsSignal().filter((n) => n.type === 'warning').length
+
+  notificationCountTotal = computed(() =>
+    notificationTypes.reduce((count, type) => {
+      return count + this.notificationCountByType()[type];
+    }, 0)
   );
-  notificationCountError = computed(
-    () => this.notificationsSignal().filter((n) => n.type === 'error').length
-  );
-  notificationCountTotal = computed(
-    () =>
-      this.notificationCountInfo() +
-      this.notificationCountWarning() +
-      this.notificationCountError()
-  );
+
   notifications = computed(() => this.notificationsSignal());
   reversedNotifications = computed(() => {
-    return structuredClone(this.notifications()).reverse();
+    return [...this.notifications()].reverse();
   });
 
   private notificationsSignal = signal<Notification[]>([]);
@@ -37,43 +36,32 @@ export class NotificationService {
   private notificationTimeout: ReturnType<typeof setTimeout> | null = null;
 
   sendError(message: string) {
-    const notification: Notification = {
-      id: this.notificationCountTotal() + 1,
-      type: 'error',
-      message: `Error: ${message}`,
-    };
-
-    this.sendNotification(notification);
+    this.sendNotificationByType(message, 'error');
   }
 
   sendWarning(message: string) {
-    const notification: Notification = {
-      id: this.notificationCountTotal() + 1,
-      type: 'warning',
-      message: `Warning: ${message}`,
-    };
-
-    this.sendNotification(notification);
+    this.sendNotificationByType(message, 'warning');
   }
 
   sendInfo(message: string) {
-    const notification: Notification = {
-      id: this.notificationCountTotal() + 1,
-      type: 'info',
-      message: `Info: ${message}`,
-    };
-
-    this.sendNotification(notification);
+    this.sendNotificationByType(message, 'info');
   }
 
-  private sendNotification(notification: Notification) {
+  private sendNotificationByType(message: string, type: NotificationTypes) {
+    const notification: Notification = {
+      id: this.notificationCountTotal() + 1,
+      type,
+      message: `${type.charAt(0).toUpperCase() + type.slice(1)}: ${message}`,
+    };
+
     this.notificationsSignal.update((prev) => {
-      if (prev.length > 49) {
-        prev.pop();
+      if (prev.length >= 50) {
+        prev.shift();
       }
 
       return [...prev, notification];
     });
+
     this.activeNotificationSignal.set(notification);
 
     if (this.notificationTimeout) {

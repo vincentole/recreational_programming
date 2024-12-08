@@ -12,7 +12,7 @@ export interface Graph {
 
 export type GraphAlgos = (typeof graphAlgoIds)[number];
 export const graphAlgoIds = ['bfs', 'dfs', 'dijkstra'] as const;
-export type GraphAlgoLabels = { [key in GraphAlgos]: string };
+export type GraphAlgoLabels = Record<GraphAlgos, string>;
 export const graphAlgoLabels: GraphAlgoLabels = {
   bfs: 'Breadth First Search',
   dfs: 'Depth First Search',

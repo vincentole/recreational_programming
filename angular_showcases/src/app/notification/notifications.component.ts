@@ -15,35 +15,36 @@ import { NgClass } from '@angular/common';
   template: `
     <div [class]="'flex gap-2 rounded-sm' + ' ' + bgClass()">
       <div class="rounded-sm px-3 py-1 h-8 grow">
-        @if (activeNotification() !== null) {
-        {{ activeNotification().message }}
+        @if (activeNotification(); as activeNotification) {
+        {{ activeNotification.message }}
         }
       </div>
 
       @if (notificationCountTotal() > 0) {
-      <button (click)="toggleNotificationBar()">
-        <div class="px-3 ml-auto flex justify-center items-center gap-2">
-          @for (type of notificationTypes; track type) {
-          <span class="flex items-center justify-center">
-            @switch (type) { @case('info'){
-            <app-info-icon />
-            <span [ngClass]="[this.iconMinWClass(notificationCountInfo)()]">
-              {{ notificationCountInfo() }}
-            </span>
-            } @case( 'warning'){
-            <app-warn-icon />
-            <span [ngClass]="[this.iconMinWClass(notificationCountWarning)()]">
-              {{ notificationCountWarning() }}
-            </span>
-            } @case('error'){
-            <app-error-icon />
-            <span [ngClass]="[this.iconMinWClass(notificationCountError)()]">
-              {{ notificationCountError() }}
-            </span>
-            }}
+      <button
+        (click)="toggleNotificationBar()"
+        class="px-3 ml-auto flex justify-center items-center gap-2 hover:bg-gray-400/20 rounded-sm transition-all"
+      >
+        @for (type of notificationTypes; track type) {
+        <span class="flex items-center justify-center">
+          @switch (type) { @case('info'){
+          <app-info-icon />
+          <span [ngClass]="[iconMinWClassInfo()]">
+            {{ notificationCountByType().info }}
           </span>
-          }
-        </div>
+          } @case( 'warning'){
+          <app-warn-icon />
+          <span [ngClass]="[iconMinWClassWarning()]">
+            {{ notificationCountByType().warning }}
+          </span>
+          } @case('error'){
+          <app-error-icon />
+          <span [ngClass]="[iconMinWClassError()]">
+            {{ notificationCountByType().error }}
+          </span>
+          }}
+        </span>
+        }
       </button>
       }
     </div>
@@ -55,9 +56,7 @@ export class NotificationsComponent {
   notificationTypes = notificationTypes;
 
   activeNotification = this.notificationService.activeNotification;
-  notificationCountInfo = this.notificationService.notificationCountInfo;
-  notificationCountWarning = this.notificationService.notificationCountWarning;
-  notificationCountError = this.notificationService.notificationCountError;
+  notificationCountByType = this.notificationService.notificationCountByType;
   notificationCountTotal = this.notificationService.notificationCountTotal;
 
   bgClass = computed(() => {
@@ -76,16 +75,25 @@ export class NotificationsComponent {
     return '';
   });
 
-  iconMinWClass(notificationCountSignal: Signal<number>) {
-    return computed(() => {
-      const count = notificationCountSignal();
-      if (count < 10) {
-        return 'min-w-3';
-      } else if (count >= 10 && count < 100) {
-        return 'min-w-5';
-      }
+  iconMinWClassInfo = computed(() =>
+    this.iconMinWClass(this.notificationCountByType().info)
+  );
+
+  iconMinWClassWarning = computed(() =>
+    this.iconMinWClass(this.notificationCountByType().warning)
+  );
+
+  iconMinWClassError = computed(() =>
+    this.iconMinWClass(this.notificationCountByType().error)
+  );
+
+  private iconMinWClass(count: number) {
+    if (count < 10) {
       return 'min-w-3';
-    });
+    } else if (count >= 10 && count < 100) {
+      return 'min-w-5';
+    }
+    return 'min-w-3';
   }
 
   toggleNotificationBar() {

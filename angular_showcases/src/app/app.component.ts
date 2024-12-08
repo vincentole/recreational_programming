@@ -18,13 +18,10 @@ import { NgClass } from '@angular/common';
   ],
   template: `
     <div class="min-h-screen flex">
-      <!-- Main Content -->
       <div
         [ngClass]="[
           'main-content flex flex-col grow transition-all duration-300',
-          isNotificationBarActive()
-            ? 'max-w-[calc(100%-16rem)] pr-4'
-            : 'max-w-full'
+          isNotificationBarActive() ? 'max-w-[calc(100%-16rem)]' : 'max-w-full'
         ]"
       >
         <header class="border-b border-gray-200 p-4">
@@ -42,14 +39,12 @@ import { NgClass } from '@angular/common';
         </footer>
       </div>
 
-      <!-- Sidebar -->
       <app-notifications-bar
         [ngClass]="[
           'fixed right-0 top-0 bottom-0 w-64 border-l border-gray-200  transition-transform duration-300 p-2 overflow-auto',
           isNotificationBarActive() ? 'translate-x-0' : 'translate-x-full'
         ]"
       >
-        <!-- Sidebar content -->
       </app-notifications-bar>
     </div>
   `,
