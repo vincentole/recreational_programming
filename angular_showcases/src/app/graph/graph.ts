@@ -51,7 +51,62 @@ export function addEdge(
   }
 }
 
-export function getNeighbors(graph: Graph, node: NodeId): Edge[] | undefined {
+export function setNodeWeight(
+  graph: Graph,
+  node: NodeId,
+  additionalWeight: number
+): void {
+  for (const [, edges] of graph.edges.entries()) {
+    for (const edge of edges) {
+      if (edge.to === node) {
+        edge.weight = additionalWeight;
+      }
+    }
+  }
+}
+
+export function hasWeightSet(
+  graph: Graph,
+  node: NodeId,
+  defaultWeight = 1
+): boolean {
+  // Check if any edge points to the given node with a weight > defaultWeight
+  for (const [, edges] of graph.edges.entries()) {
+    for (const edge of edges) {
+      if (edge.to === node && edge.weight > defaultWeight) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+export function getNodesWithWeightsSet(
+  graph: Graph,
+  defaultWeight = 1
+): Set<NodeId> {
+  const nodesWithWeightsSet = new Set<NodeId>();
+
+  for (const [, edges] of graph.edges.entries()) {
+    for (const edge of edges) {
+      if (edge.weight > defaultWeight) {
+        nodesWithWeightsSet.add(edge.to);
+      }
+    }
+  }
+
+  return nodesWithWeightsSet;
+}
+
+export function resetWeights(graph: Graph, defaultWeight = 1): void {
+  for (const [, edges] of graph.edges.entries()) {
+    for (const edge of edges) {
+      edge.weight = defaultWeight;
+    }
+  }
+}
+
+export function getEdges(graph: Graph, node: NodeId): Edge[] | undefined {
   return graph.edges.get(node);
 }
 
@@ -112,9 +167,14 @@ export function dfs(
   return result;
 }
 
-export function dijkstra(graph: Graph, start: NodeId): Record<NodeId, number> {
+export function dijkstra(
+  graph: Graph,
+  start: NodeId,
+  end: NodeId
+): { distances: Record<NodeId, number>; visitedOrder: NodeId[] } {
   const distances: Record<NodeId, number> = {};
   const visited = new Set<NodeId>();
+  const visitedOrder: NodeId[] = [];
   const priorityQueue: { node: NodeId; distance: number }[] = [];
 
   // Initialize distances
@@ -132,11 +192,19 @@ export function dijkstra(graph: Graph, start: NodeId): Record<NodeId, number> {
     const { node } = priorityQueue.shift()!;
 
     if (visited.has(node)) continue;
-    visited.add(node);
 
-    // Update distances for neighbors
-    const neighbors = graph.edges.get(node) || [];
-    for (const edge of neighbors) {
+    // Mark node as visited
+    visited.add(node);
+    visitedOrder.push(node);
+
+    // Stop if the end node is reached
+    if (node === end) {
+      break;
+    }
+
+    // Update distances for edges
+    const edges = graph.edges.get(node) || [];
+    for (const edge of edges) {
       const newDist = distances[node] + edge.weight;
       if (newDist < distances[edge.to]) {
         distances[edge.to] = newDist;
@@ -145,7 +213,7 @@ export function dijkstra(graph: Graph, start: NodeId): Record<NodeId, number> {
     }
   }
 
-  return distances;
+  return { distances, visitedOrder };
 }
 
 export function buildGridGraph(rows = 5, cols = 5): Graph {
